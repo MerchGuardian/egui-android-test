@@ -1,0 +1,62 @@
+[package]
+name = "egui-android-test"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type=["cdylib"]
+
+[dependencies]
+android-activity = "0.6.0"
+eframe = "0.29.1"
+egui = "0.29.1"
+egui_demo_lib = "0.29.1"
+egui_extras = "0.29.1"
+winit = { version = "0.30.5", features = ["android-native-activity"] }
+
+[package.metadata.android]
+package = "com.foxhunetr.egui_demo"
+
+build_targets = [ "aarch64-linux-android" ]
+
+# Name for final APK file.
+# Defaults to package name.
+apk_name = "egui demo"
+
+strip = "default"
+
+# See https://developer.android.com/guide/topics/manifest/queries-element#provider
+[[package.metadata.android.queries.provider]]
+authorities = "org.khronos.openxr.runtime_broker;org.khronos.openxr.system_runtime_broker"
+# Note: The `name` attribute is normally not required for a queries provider, but is non-optional
+# as a workaround for aapt throwing errors about missing `android:name` attribute.
+# This will be made optional if/when cargo-apk migrates to aapt2.
+name = "org.khronos.openxr"
+
+theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+
+label = "egui demo"
+
+# See https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs
+extract_native_libs = true
+
+# See https://developer.android.com/guide/topics/manifest/application-element#usesCleartextTraffic
+uses_cleartext_traffic = true
+
+config_changes = "orientation"
+
+# See https://developer.android.com/guide/topics/manifest/activity-element#label Defaults to the application's label. label = "Activity Name" # See https://developer.android.com/guide/topics/manifest/activity-element#lmode Defaults to "standard". launch_mode = "singleTop" # See https://developer.android.com/guide/topics/manifest/activity-element#screen Defaults to "unspecified".
+orientation = "portrait"
+
+# See https://developer.android.com/guide/topics/manifest/activity-element#exported
+#
+# Unset by default, or true when targeting Android >= 31 (S and up).
+exported = true
+
+# See https://developer.android.com/guide/topics/manifest/activity-element#resizeableActivity
+#
+# Defaults to true on Android >= 24, no effect on earlier API levels
+resizeable_activity = false
+
+# See https://developer.android.com/guide/topics/manifest/activity-element#always
+always_retain_task_state = true
