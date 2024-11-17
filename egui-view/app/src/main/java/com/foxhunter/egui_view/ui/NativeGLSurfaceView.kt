@@ -14,7 +14,6 @@ private const val glVersion = 3.0
 
 class NativeGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     private val renderer: NativeGLRenderer
-    private var nativeContext: Long = 0
 
     init {
         setEGLContextFactory(object: EGLContextFactory {
@@ -26,17 +25,11 @@ class NativeGLSurfaceView(context: Context?) : GLSurfaceView(context) {
                     eglConfig,
                     EGL10.EGL_NO_CONTEXT,
                     intArrayOf(EGL_CONTEXT_CLIENT_VERSION, glVersion.toInt(), EGL10.EGL_NONE))
-                nativeContext = NativeGLRenderer.createNativeContext0()
-                if (nativeContext == 0L) {
-                    throw RuntimeException("Failed to initialize native context")
-                }
                 return ctx
             }
 
             override fun destroyContext(egl: EGL10?, display: EGLDisplay?, context: EGLContext?) {
                 Log.i("egui_view", "destroyContext: egl: $egl, display: $display, context: $context")
-                NativeGLRenderer.destroyNativeContext0(nativeContext)
-                nativeContext = 0L
                 egl!!.eglDestroyContext(display, context)
             }
         })
@@ -68,15 +61,10 @@ class NativeGLRenderer : GLSurfaceView.Renderer {
         }
 
         @JvmStatic
-        external fun createNativeContext0(): Long
+        private external fun onDrawFrame0()
         @JvmStatic
-        external fun destroyNativeContext0(handle: Long)
-
+        private external fun onSurfaceCreated0()
         @JvmStatic
-        private external fun onDrawFrame0(handle: Long)
-        @JvmStatic
-        private external fun onSurfaceCreated0(handle: Long)
-        @JvmStatic
-        private external fun onSurfaceChanged0(handle: Long, width: Int, height: Int)
+        private external fun onSurfaceChanged0(width: Int, height: Int)
     }
 }
