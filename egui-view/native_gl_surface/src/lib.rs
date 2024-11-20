@@ -5,22 +5,23 @@ use std::{ffi::c_void, sync::OnceLock};
 use android_logger::Config;
 use jni::{
     objects::JClass,
-    sys::{jint, JNIEnv},
+    sys::{jint, jlong, JNIEnv},
 };
-use log::{info, LevelFilter};
+use log::{info, trace, LevelFilter};
 
 #[no_mangle]
 pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onDrawFrame0(
     _: JNIEnv,
     _: JClass,
+    _native_surface: jlong,
 ) {
-    info!("onDrawFrame0 called");
+    trace!("onDrawFrame0 called");
 
     let ctx = get_glow_context();
 
     unsafe {
-        use glow::HasContext;
-        ctx.clear(glow::COLOR_BUFFER_BIT);
+        use glow::*;
+        ctx.clear(COLOR_BUFFER_BIT);
         ctx.clear_color(1.0, 0.0, 1.0, 1.0);
     }
 }
@@ -29,6 +30,7 @@ pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onDrawFrame0
 pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onSurfaceCreated0(
     _: JNIEnv,
     _: JClass,
+    _native_surface: jlong,
 ) {
     info!("onSurfaceCreated0 called");
 }
@@ -37,6 +39,7 @@ pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onSurfaceCre
 pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onSurfaceChanged0(
     _: JNIEnv,
     _: JClass,
+    _native_surface: jlong,
     width: jint,
     height: jint,
 ) {
@@ -45,10 +48,35 @@ pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLRenderer_onSurfaceCha
     let ctx = get_glow_context();
 
     unsafe {
-        use glow::HasContext;
+        use glow::*;
         ctx.viewport(0, 0, width, height);
     }
     info!("Set gl viewport");
+}
+
+struct NativeSurface {}
+
+#[no_mangle]
+pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLSurfaceView_createNativeSurface0(
+    _: JNIEnv,
+    _: JClass,
+) -> jlong {
+    let native_surface = NativeSurface {};
+    let ptr: *mut NativeSurface = Box::into_raw(Box::new(native_surface));
+    info!("Allocated native surface {ptr:?}");
+    ptr as usize as jlong
+    //
+}
+
+#[no_mangle]
+pub extern "C" fn Java_com_foxhunter_egui_1view_ui_NativeGLSurfaceView_destroyNativeSurface0(
+    _: JNIEnv,
+    _: JClass,
+    native_surface: jlong,
+) {
+    let ptr = native_surface as usize as *mut NativeSurface;
+    info!("Destroying native surface {ptr:?}");
+    let _handle = unsafe { Box::from_raw(ptr) };
 }
 
 static GL_FUNCTIONS: std::sync::OnceLock<glow::Context> = OnceLock::new();
@@ -57,7 +85,6 @@ pub fn get_glow_context() -> &'static glow::Context {
     GL_FUNCTIONS.get_or_init(|| {
         info!("Creating glow wrapper");
         fn load_gl_func(symbol_name: &str) -> *const c_void {
-            info!("Looking up {symbol_name}");
             let c_str = CString::new(symbol_name).unwrap();
             // SAFETY: function provided by android
             unsafe { eglGetProcAddress(c_str.as_ptr().cast()) }
