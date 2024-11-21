@@ -5,7 +5,7 @@ plugins {
 
 tasks.register<Exec>("buildRustNatives") {
     workingDir("../native_gl_surface")
-    commandLine("./nix_shell_build.sh")
+    commandLine("bash", "-c", "nix develop --command ./build.sh")
     outputs.upToDateWhen { false }
 }
 

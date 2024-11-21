@@ -8,7 +8,9 @@ crate-type=["cdylib"]
 
 [dependencies]
 android_logger = "0.14.1"
-glow = "0.15.0"
+egui = "0.29.1"
+egui_glow = "0.29.1"
+glow = "0.14.2"
 jni = "0.21.1"
 log = "0.4.22"
 ndk-context = "0.1.1"

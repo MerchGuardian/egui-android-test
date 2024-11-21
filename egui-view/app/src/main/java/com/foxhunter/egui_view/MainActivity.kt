@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "From Jetpack Compose",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -58,9 +58,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 factory = { context ->
                     NativeGLSurfaceView(context)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

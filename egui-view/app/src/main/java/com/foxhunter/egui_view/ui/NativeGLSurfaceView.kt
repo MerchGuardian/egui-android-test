@@ -3,6 +3,7 @@ package com.foxhunter.egui_view.ui
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.Log
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
@@ -16,7 +17,7 @@ private const val glVersion = 3.0
 class NativeGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     private val renderer: NativeGLRenderer
 
-    val nativeSurface: Long
+    var nativeSurface: Long
 
     init {
         setEGLContextFactory(object: EGLContextFactory {
@@ -47,7 +48,15 @@ class NativeGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         super.surfaceDestroyed(holder)
         Log.i("egui_view", "surfaceDestroyed: holder: $holder")
-        destroyNativeSurface0(nativeSurface)
+        synchronized(this) {
+            destroyNativeSurface0(nativeSurface)
+            nativeSurface = 0
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        Log.i("egui_view", "TOUCH EVENT: $event")
+        return true
     }
 
     companion object {
@@ -63,19 +72,25 @@ class NativeGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     }
 }
 
-class NativeGLRenderer(val glSurfaceView: NativeGLSurfaceView) : GLSurfaceView.Renderer {
+class NativeGLRenderer(private val glSurfaceView: NativeGLSurfaceView) : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10) {
-        onDrawFrame0(glSurfaceView.nativeSurface)
+        synchronized(this.glSurfaceView) {
+            onDrawFrame0(glSurfaceView.nativeSurface)
+        }
     }
 
     override fun onSurfaceCreated(gl: GL10?, conig: EGLConfig?) {
         Log.i("egui_view", "onSurfaceCreated")
-        onSurfaceCreated0(glSurfaceView.nativeSurface)
+        synchronized(this.glSurfaceView) {
+            onSurfaceCreated0(glSurfaceView.nativeSurface)
+        }
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
         Log.i("egui_view", "onSurfaceChanged: width: $width, height: $height")
-        onSurfaceChanged0(glSurfaceView.nativeSurface, width, height)
+        synchronized(this.glSurfaceView) {
+            onSurfaceChanged0(glSurfaceView.nativeSurface, width, height)
+        }
     }
 
     companion object {
